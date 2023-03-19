@@ -2,28 +2,23 @@ import 'package:animated_stream_list/src/diff_payload.dart';
 import 'package:animated_stream_list/src/path_node.dart';
 import 'package:flutter/foundation.dart';
 
-typedef bool Equalizer(dynamic item1, dynamic item2);
-
-class DiffUtil<E> {
-  Future<List<Diff>> calculateDiff(List<E> oldList, List<E> newList) {
-    final args = _DiffArguments<E>(oldList, newList);
+class DiffUtil<T> {
+  Future<List<Diff>> calculateDiff(List<T> oldList, List<T> newList) {
+    final args = _DiffArguments<T>(oldList, newList);
     return compute(_myersDiff, args);
   }
 }
 
-class _DiffArguments<E> {
-  final List<E> oldList;
-  final List<E> newList;
+class _DiffArguments<T> {
+  final List<T> oldList;
+  final List<T> newList;
 
   _DiffArguments(this.oldList, this.newList);
 }
 
-List<Diff> _myersDiff<E>(_DiffArguments<E> args) {
-  final List<E>? oldList = args.oldList;
-  final List<E>? newList = args.newList;
-
-  if (oldList == null) throw ArgumentError("oldList is null");
-  if (newList == null) throw ArgumentError("newList is null");
+List<Diff> _myersDiff<T>(_DiffArguments<T> args) {
+  final List<T> oldList = args.oldList;
+  final List<T> newList = args.newList;
 
   if (oldList == newList) return [];
 
@@ -44,61 +39,68 @@ List<Diff> _myersDiff<E>(_DiffArguments<E> args) {
   return diffs.reversed.toList(growable: true);
 }
 
-PathNode _buildPath<E>(List<E> oldList, List<E> newList, Equalizer equals) {
+PathNode _buildPath<T>(List<T> oldList, List<T> newList, bool Function(T,T) equals) {
   final oldSize = oldList.length;
   final newSize = newList.length;
 
   final int max = oldSize + newSize + 1;
   final size = (2 * max) + 1;
   final int middle = size ~/ 2;
-  final List<PathNode> diagonal = [];
+  final List<PathNode?> diagonal = List.filled(size, null);
 
   diagonal[middle + 1] = Snake(0, -1, null);
+  
   for (int d = 0; d < max; d++) {
     for (int k = -d; k <= d; k += 2) {
       final int kmiddle = middle + k;
       final int kplus = kmiddle + 1;
       final int kminus = kmiddle - 1;
-      PathNode prev;
+      PathNode? prev;
 
       int i;
       if ((k == -d) ||
           (k != d &&
-              diagonal[kminus].originIndex < diagonal[kplus].originIndex)) {
-        i = diagonal[kplus].originIndex;
+              diagonal[kminus]!.originIndex < diagonal[kplus]!.originIndex)) {
+        i = diagonal[kplus]!.originIndex;
         prev = diagonal[kplus];
       } else {
-        i = diagonal[kminus].originIndex + 1;
+        i = diagonal[kminus]!.originIndex + 1;
         prev = diagonal[kminus];
       }
 
-      // diagonal[kminus] = null;
+      diagonal[kminus] = null;
 
       int j = i - k;
 
-      PathNode node = DiffNode(i, j, prev);
+      PathNode node;
 
-      while (i < oldSize && j < newSize && equals(oldList[i], newList[j])) {
-        i++;
-        j++;
-      }
-      if (i > node.originIndex) {
-        node = Snake(i, j, node);
-      }
+      if(prev != null){
+        node= DiffNode(i,j,prev);
+       }else{
+         throw Exception('Previous node is null');
+       }
 
-      diagonal[kmiddle] = node;
+       while (i < oldSize && j < newSize && equals(oldList[i], newList[j])) {
+         i++;
+         j++;
+       }
+      
+       if (i > node.originIndex) {
+         node= Snake(i,j,node);
+       }
 
-      if (i >= oldSize && j >= newSize) {
-        return diagonal[kmiddle];
-      }
-    }
-    // diagonal[middle + d - 1] = null;
-  }
+       diagonal[kmiddle]=node;
 
-  throw Exception();
+       if(i>=oldSize && j>=newSize){
+         return diagonal[kmiddle]!;
+       }
+     }
+     diagonal[middle+d-1]=null;
+   }
+   throw Exception();
 }
 
-List<Diff> _buildPatch<E>(PathNode? path, List<E> oldList, List<E> newList) {
+List<Diff> _buildPatch<T>(PathNode? path, List<T> oldList, List<T> newList) {
 
   PathNode? _path = path;
 
@@ -120,8 +122,8 @@ List<Diff> _buildPatch<E>(PathNode? path, List<E> oldList, List<E> newList) {
     int iAnchor = _path.originIndex;
     int jAnchor = _path.revisedIndex;
 
-    List<E> original = oldList.sublist(iAnchor, i);
-    List<E> revised = newList.sublist(jAnchor, j);
+    List<T> original = oldList.sublist(iAnchor, i);
+    List<T> revised = newList.sublist(jAnchor, j);
 
     if (original.length == 0 && revised.length != 0) {
       diffs.add(InsertDiff(iAnchor, revised.length, revised));
