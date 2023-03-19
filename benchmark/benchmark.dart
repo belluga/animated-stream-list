@@ -8,8 +8,8 @@ class TemplateBenchmark extends BenchmarkBase {
 
   static const size = 1000;
 
-  List<int> l1;
-  List<int> l2;
+  late List<int> l1;
+  late List<int> l2;
 
   static void main() {
     new TemplateBenchmark().report();

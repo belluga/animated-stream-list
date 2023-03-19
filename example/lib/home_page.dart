@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:animated_stream_list/animated_stream_list.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'todo.dart';
 import 'todos_bloc.dart';
@@ -66,7 +65,6 @@ class _HomePageState extends State<HomePage> {
       itemRemovedBuilder: (Todo todo, int index, BuildContext context,
               Animation<double> animation) =>
           _buildRemovedTile(todo, animation),
-      equals: (todo1, todo2) => todo1.changedAt == todo2.changedAt,
     );
   }
 

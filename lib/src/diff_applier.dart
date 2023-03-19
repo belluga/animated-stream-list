@@ -32,7 +32,7 @@ class _Visitor<E> implements DiffVisitor {
       }
     }
 
-    final changedItems = diff.items.take(diff.size).toList();
+    final changedItems = diff.items.take(diff.size).toList() as List<E>;
     _controller.listChanged(diff.index, changedItems);
   }
 

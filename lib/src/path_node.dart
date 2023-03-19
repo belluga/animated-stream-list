@@ -1,7 +1,7 @@
 abstract class PathNode {
   final int originIndex;
   final int revisedIndex;
-  final PathNode previousNode;
+  final PathNode? previousNode;
 
   PathNode(this.originIndex, this.revisedIndex, this.previousNode);
 
@@ -9,9 +9,15 @@ abstract class PathNode {
 
   bool isBootStrap() => originIndex < 0 || revisedIndex < 0;
 
-  PathNode previousSnake() {
+  PathNode? previousSnake() {
+    final PathNode? _previousNode = previousNode;
+
+    if(_previousNode == null){
+      return null;
+    }
+
     if (isBootStrap()) return null;
-    if (!isSnake() && previousNode != null) return previousNode.previousSnake();
+    if (!isSnake()) return _previousNode.previousSnake();
     return this;
   }
 
@@ -19,7 +25,7 @@ abstract class PathNode {
   String toString() {
     final buffer = StringBuffer();
     buffer.write("[");
-    PathNode node = this;
+    PathNode? node = this;
     while (node != null) {
       buffer.write("(");
       buffer.write("${node.originIndex.toString()}");
@@ -34,7 +40,7 @@ abstract class PathNode {
 }
 
 class Snake extends PathNode {
-  Snake(int originIndex, int revisedIndex, PathNode previousNode)
+  Snake(int originIndex, int revisedIndex, PathNode? previousNode)
       : super(originIndex, revisedIndex, previousNode);
 
   @override
@@ -43,8 +49,7 @@ class Snake extends PathNode {
 
 class DiffNode extends PathNode {
   DiffNode(int originIndex, int revisedIndex, PathNode previousNode)
-      : super(originIndex, revisedIndex,
-            previousNode == null ? null : previousNode.previousSnake());
+      : super(originIndex, revisedIndex, previousNode.previousSnake());
 
   @override
   bool isSnake() => false;

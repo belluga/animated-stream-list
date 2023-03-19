@@ -14,25 +14,23 @@ class ListController<E> {
   final AnimatedStreamListItemBuilder<E> itemRemovedBuilder;
 
   ListController({
-    @required this.key,
-    @required this.items,
-    @required this.itemRemovedBuilder,
-    @required this.duration,
-  })  : assert(key != null),
-        assert(itemRemovedBuilder != null),
-        assert(items != null);
+    required this.key,
+    required this.items,
+    required this.itemRemovedBuilder,
+    required this.duration,
+  });
 
-  AnimatedListState get _list => key.currentState;
+  AnimatedListState? get _list => key.currentState;
 
   void insert(int index, E item) {
     items.insert(index, item);
 
-    _list.insertItem(index, duration: duration);
+    _list?.insertItem(index, duration: duration);
   }
 
   void removeItemAt(int index) {
     E item = items.removeAt(index);
-    _list.removeItem(
+    _list?.removeItem(
       index,
       (BuildContext context, Animation<double> animation) =>
           itemRemovedBuilder(item, index, context, animation),
@@ -48,7 +46,7 @@ class ListController<E> {
     }
 
     // ignore: invalid_use_of_protected_member
-    _list.setState(() {});
+    _list?.setState(() {});
   }
 
   int get length => items.length;
